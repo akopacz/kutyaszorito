@@ -8,6 +8,7 @@ import time
 K = 3
 SIZE = 512
 TIMES = 4
+GLOBAL_GAME_TIME = 20
 
 class CustomException(Exception):
     pass
@@ -51,7 +52,7 @@ won = [0, 0]
 while players_connected < 2:
     print ( 'waiting for a connection')
     connection, client_address = sock.accept()
-    clients[players_connected] = (connection, client_address)
+    clients[players_connected] = connection
     print ( 'connection from', client_address)
     try:
         connection.sendall(json.dumps({
@@ -74,7 +75,10 @@ while players_connected < 2:
 try:
     for t in range(TIMES):
         positions = [(0, K//2), (K-1, K//2)]
-
+        remaining_times = {
+            0: GLOBAL_GAME_TIME,
+            1: GLOBAL_GAME_TIME
+        }
         board = np.zeros((K, K), dtype=int)
         board[positions[0]] = players[0]
         board[positions[1]] = players[1]
@@ -85,13 +89,19 @@ try:
         else:
             player_indexes = (1, 0)
         for ind in player_indexes:
-            clients[ind][0].sendall(json.dumps({
+            clients[ind].sendall(json.dumps({
                 "cmd": "start",
                 "coords": positions[ind],
                 "op_coords": positions[1 - ind]
-                }).encode())
+            }).encode())
+            data = json.loads(connection.recv(SIZE).decode())
+            if "status" not in data or data["status"] != "OK":
+                raise CustomException(json.dumps({
+                        "cmd": "error",
+                        "msg": "game start not confirmed",
+                        "player": players[ind]
+                    }))
 
-        # time.sleep(0.5)
         move_to, excl = None, None
 
         print("Client", player_indexes[0], "starting")
@@ -110,7 +120,7 @@ try:
                     print("Client", 1 - index, "won")
                     break
 
-                conn = clients[index][0]
+                conn = clients[index]
 
                 # start timer
                 start = time.time()
@@ -140,7 +150,16 @@ try:
 
                 # stop timer
                 end = time.time()
-                print("Client", index, "responded in", end - start, "seconds")
+                time_elapsed = end - start
+                print("Client", index, "responded in", time_elapsed, "seconds")
+                if time_elapsed > 0.5:
+                    remaining_times[index] -= (time_elapsed - 0.5)
+                    if time_elapsed < 0:
+                        # current player lost
+                        play = False
+                        won[1 - index] += 1
+                        print("Client", index, "exceeded time limit. Client", 1 - index, "won")
+                        break
 
                 if is_valid_position(board, move_to) and is_valid_move(positions[index], move_to):
                     board[positions[index]] = 0
@@ -148,21 +167,23 @@ try:
                     board[move_to] = players[index]
                 else:
                     raise CustomException(json.dumps({
-                    "cmd": "error",
-                    "msg": "invalid move",
-                    "player": players[index]
-                }))
+                        "cmd": "error",
+                        "msg": "invalid move",
+                        "player": players[index]
+                    }))
 
                 if is_valid_position(board, excl):
                     board[excl] = -1
                 else:
                     raise CustomException(json.dumps({
-                    "cmd": "error",
-                    "msg": "invalid cell to exclude",
-                    "player": players[index]
-                }))
+                        "cmd": "error",
+                        "msg": "invalid cell to exclude",
+                        "player": players[index]
+                    }))
                 print(board)
-                time.sleep(0.5)
+        print("Game finished")
+        print("remaining time (in seconds) - Client 0 :", remaining_times[0], "Client 1 :", remaining_times[1])
+
     # Game over
     stats = [w/TIMES for w in won]
     print("Statistics:")
@@ -174,18 +195,18 @@ try:
     else:
         winner = 0 if won[0] > won[1] else 1
     print("Winner is: Client", winner)
-    for conn, _ in clients:
+    for conn in clients:
         conn.sendall(json.dumps({
                         "cmd": "over",
                         "winner": players[winner] if winner is not None else None
                     }).encode())
     time.sleep(0.5)
 except CustomException as e:
-    for conn, _ in clients:
+    for conn in clients:
         conn.sendall(e.args[0].encode())
 finally:
     # Clean up the connection
-    for conn, _ in clients:
+    for conn in clients:
         conn.close()
     
     sock.close()
