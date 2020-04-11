@@ -91,13 +91,29 @@ try:
                 "op_coords": positions[1 - ind]
                 }).encode())
 
-        time.sleep(0.5)
+        # time.sleep(0.5)
         move_to, excl = None, None
 
         print("Client", player_indexes[0], "starting")
         while play:
             for index in player_indexes:
+                if is_over(board, positions[1 - index]):
+                    # current player won
+                    play = False
+                    won[index] += 1
+                    print("Client", index, "won")
+                    break
+                if is_over(board, positions[index]):
+                    # current player lost
+                    play = False
+                    won[1 - index] += 1
+                    print("Client", 1 - index, "won")
+                    break
+
                 conn = clients[index][0]
+
+                # start timer
+                start = time.time()
                 conn.sendall(json.dumps({
                         "cmd": "move",
                         "move": move_to,
@@ -122,6 +138,10 @@ try:
                         "player": players[index]
                     }))
 
+                # stop timer
+                end = time.time()
+                print("Client", index, "responded in", end - start, "seconds")
+
                 if is_valid_position(board, move_to) and is_valid_move(positions[index], move_to):
                     board[positions[index]] = 0
                     positions[index] = move_to
@@ -142,13 +162,6 @@ try:
                     "player": players[index]
                 }))
                 print(board)
-
-                opp_index = 1 - index
-                if is_over(board, positions[opp_index]):
-                    play = False
-                    won[index] += 1
-                    print("Client", index, "won")
-                    break
                 time.sleep(0.5)
     # Game over
     stats = [w/TIMES for w in won]
@@ -164,7 +177,7 @@ try:
     for conn, _ in clients:
         conn.sendall(json.dumps({
                         "cmd": "over",
-                        "winner": players[winner] if winner else None
+                        "winner": players[winner] if winner is not None else None
                     }).encode())
     time.sleep(0.5)
 except CustomException as e:
