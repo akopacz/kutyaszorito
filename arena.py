@@ -5,9 +5,9 @@ import json
 import numpy as np
 import time
 
-K = 3
+K = 5
 SIZE = 512
-TIMES = 4
+TIMES = 2
 GLOBAL_GAME_TIME = 20
 
 class CustomException(Exception):
@@ -94,7 +94,8 @@ try:
                 "coords": positions[ind],
                 "op_coords": positions[1 - ind]
             }).encode())
-            data = json.loads(connection.recv(SIZE).decode())
+        for ind in player_indexes:
+            data = json.loads(clients[ind].recv(SIZE).decode())
             if "status" not in data or data["status"] != "OK":
                 raise CustomException(json.dumps({
                         "cmd": "error",
@@ -154,7 +155,7 @@ try:
                 print("Client", index, "responded in", time_elapsed, "seconds")
                 if time_elapsed > 0.5:
                     remaining_times[index] -= (time_elapsed - 0.5)
-                    if time_elapsed < 0:
+                    if remaining_times[index] < 0:
                         # current player lost
                         play = False
                         won[1 - index] += 1
