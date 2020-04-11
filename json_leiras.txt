@@ -1,8 +1,8 @@
-Valósítsunk meg egy klienst, hogy a bot játékos tudjon csatlakozni egy szerverhez socketen keresztül és kommunikáljon vele JSON
+Valósítsunk meg egy klienst úgy, hogy a bot játékos tudjon csatlakozni egy szerverhez socketen keresztül és kommunikáljon vele JSON
 formátumú üzenetekkel. A kliens több játékot (kört) kell tudjon játszani egy másik (bot) játékos ellen egy K*K méretű pályán.
-A pálya sorait, illetve oszlopait 0-tól (k - 1)-ig vannak számozva.
+A pálya sorai, illetve oszlopai 0-tól (k - 1)-ig vannak számozva.
 
-A kliensek a localhost:10000 címre kell csatlazzon (tcp kapcsolattal). A sikeres csatlakozás esetén a szerver küld egy 
+A kliens a localhost:10000 címre kell csatlakozzon (tcp kapcsolattal). A sikeres csatlakozás esetén a szerver küld egy 
 inicializációs üzenetet, amelyben szerepel a pálya mérete, és az éppen csatlakozó játékos sorszáma. Egy játékos sorszáma 
 1 vagy 2 lehet. Az üzenet struktúrája:
     {
@@ -10,31 +10,35 @@ inicializációs üzenetet, amelyben szerepel a pálya mérete, és az éppen cs
         "K": <pálya mérete>, 
         "player": <játékos id-ja>
     }
-Példa: {"cmd": "init", "K": 7, "player": 2}
+Példa: {"cmd": "init", "K": 5, "player": 2}
 A kliens jelzi, hogy megkapta az üzenetet:
     {
         "status": "OK"
     }
 
-Minden új kör elején a szerver küld egy "start" üzenetet, a játékosok kezdő pozícióival.
+Minden új kör elején a szerver küld egy "start" üzenetet, a játékosok kezdő pozícióival:
     {
         "cmd": "start",
         "coords": [<x1>, <y1>],    # az aktuális játékos koordinátája 
         "op_coords": [<x2>, <y2>]  # az ellenfél játékos koordinátája 
     }
-Példa: {"cmd": "start", "coords": [0, 3], "op_coords": [6, 3]}
+Példa: {"cmd": "start", "coords": [0, 2], "op_coords": [4, 2]}
 Ez az üzenet jelzi, hogy egy új kör kezdődött, a szerver nem küld egy külön üzenetet, hogy befejeződött az előző kör. 
- 
+A kliens ebben az esetben is jelzi, hogy megkapta az üzenetet:
+    {
+        "status": "OK"
+    }
+
 Amikor a kliens kell lépjen, akkor ezt a szerver jelzi egy üzenettel, amelyben szerepel az ellenfél előző lépése is. Ha ez az 
-első lépés, az ellenfélnek nem volt előző lépése, akkor a "move" és "exclude" mezők null-t tartalmaznak.
+első lépés, azaz az ellenfélnek nem volt még előző lépése, akkor a "move" és "exclude" mezők null-t tartalmaznak.
     {
         "cmd": "move",
         "move": [<x1>, <y1>],
         "exclude": [<x2>, <y2>]
     }
-Példa: {"cmd": "move", "move": [1, 3], "exclude": [6, 2]}
+Példa: {"cmd": "move", "move": [1, 3], "exclude": [4, 1]}
 
-Amiután az összes játszma véget ért, akkor ezt az üzenetet kapják a játékosok:
+Amiután az összes játszma véget ért, ezt az üzenetet kapják a játékosok:
     {
         "cmd": "over",
         "winner": <játékos id> # null-t tartalmaz döntetlen esetén
@@ -44,12 +48,12 @@ Amiután az összes játszma véget ért, akkor ezt az üzenetet kapják a ját�
 Hiba kezelés: 
 
 Amikor a kliens nem megfelelő mezőre akar lépni, vagy olyan mezőt akar kizárni, amelyet nem lehet, akkor a szerver mindkét 
-játékosnak üzenetet küld. Amikor a játékos hibás mezőre akar lépni, vagy hibás mezőt akar kizármi, akkor automatikusan 
+játékosnak üzenetet küld. Amikor a játékos hibás mezőre akar lépni, vagy hibás mezőt akar kizárni, akkor automatikusan 
 elveszíti azt a kört és új játék kezdődik.
     {
         "cmd": "error",
-        "msg": <üzenet>,        # a hibát leiró secifikusabb üzenet
-        "player": <játékos id>  # az játékos aki hibát ejtet
+        "msg": <üzenet>,        # a hibát leiró specifikusabb üzenet
+        "player": <játékos id>  # az a játékos, aki hibát ejtett
     }
 Példa: {"cmd": "error", "msg": "invalid input", "player": 1}
 
