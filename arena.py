@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import socket
 import sys
 import json
@@ -43,14 +44,14 @@ sock.bind(server_address)
 sock.listen(1)
 
 players_connected = 0
-clients = []
+clients = [None, None]
 players = [1, 2]
 won = [0, 0]
 
 while players_connected < 2:
     print ( 'waiting for a connection')
     connection, client_address = sock.accept()
-    clients.append((connection, client_address))
+    clients[players_connected] = (connection, client_address)
     print ( 'connection from', client_address)
     try:
         connection.sendall(json.dumps({
@@ -62,6 +63,8 @@ while players_connected < 2:
         data = json.loads(connection.recv(SIZE).decode())
         if "status" not in data or data["status"] != "OK":
             print("Problem sending to client. Ignore connection attempt.")
+            continue
+
         players_connected += 1
     except Exception:
         print("Problem sending to client. Ignore connection attempt.")
@@ -70,8 +73,7 @@ while players_connected < 2:
 # Wait for a connection
 try:
     for t in range(TIMES):
-        # positions = [(0, K//2), (K-1, K//2)]
-        positions = [(K-1, K//2), (0, K//2)]
+        positions = [(0, K//2), (K-1, K//2)]
 
         board = np.zeros((K, K), dtype=int)
         board[positions[0]] = players[0]
