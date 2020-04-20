@@ -108,17 +108,17 @@ try:
         print("Client", player_indexes[0], "starting")
         while play:
             for index in player_indexes:
-                if is_over(board, positions[1 - index]):
-                    # current player won
-                    play = False
-                    won[index] += 1
-                    print("Client", index, "won")
-                    break
                 if is_over(board, positions[index]):
                     # current player lost
                     play = False
                     won[1 - index] += 1
                     print("Client", 1 - index, "won")
+                    break
+                if is_over(board, positions[1 - index]):
+                    # current player won
+                    play = False
+                    won[index] += 1
+                    print("Client", index, "won")
                     break
 
                 conn = clients[index]
@@ -188,14 +188,18 @@ try:
     # Game over
     stats = [w/TIMES for w in won]
     print("Statistics:")
-    print("Client 0:", stats[0])
-    print("Client 1:", stats[1])
+    print("Client 0 (symbol {}): {}".format(players[0], stats[0]))
+    print("Client 1 (symbol {}): {}".format(players[1], stats[1]))
 
     if won[0] == won[1]:
         winner = None
     else:
         winner = 0 if won[0] > won[1] else 1
-    print("Winner is: Client", winner)
+    if winner:
+        print("Winner is: Client {} (symbol {})".format(winner, players[winner]))
+    else:
+        print("Game outcome: Draw")
+    
     for conn in clients:
         conn.sendall(json.dumps({
                         "cmd": "over",
