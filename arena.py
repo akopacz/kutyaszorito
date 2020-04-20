@@ -105,20 +105,20 @@ try:
 
         move_to, excl = None, None
 
-        print("Client", player_indexes[0], "starting")
+        print("Player", players[player_indexes[0]], "starting")
         while play:
             for index in player_indexes:
                 if is_over(board, positions[index]):
                     # current player lost
                     play = False
                     won[1 - index] += 1
-                    print("Client", 1 - index, "won")
+                    print("Player", players[1 - index], "won")
                     break
                 if is_over(board, positions[1 - index]):
                     # current player won
                     play = False
                     won[index] += 1
-                    print("Client", index, "won")
+                    print("Player", players[index], "won")
                     break
 
                 conn = clients[index]
@@ -133,7 +133,7 @@ try:
             
                 try:
                     data = json.loads(conn.recv(SIZE).decode())
-                    print("Client", index, data)
+                    print("Player", players[index], data)
                     if "client_error" in data:
                         play = False
                         winner = players[1 - index]
@@ -152,14 +152,14 @@ try:
                 # stop timer
                 end = time.time()
                 time_elapsed = end - start
-                print("Client", index, "responded in", time_elapsed, "seconds")
+                print("Player", players[index], "responded in", time_elapsed, "seconds")
                 if time_elapsed > 0.5:
                     remaining_times[index] -= (time_elapsed - 0.5)
                     if remaining_times[index] < 0:
                         # current player lost
                         play = False
                         won[1 - index] += 1
-                        print("Client", index, "exceeded time limit. Client", 1 - index, "won")
+                        print("Player", players[index], "exceeded time limit. Client", 1 - index, "won")
                         break
 
                 if is_valid_position(board, move_to) and is_valid_move(positions[index], move_to):
@@ -183,20 +183,20 @@ try:
                     }))
                 print(board)
         print("Game finished")
-        print("remaining time (in seconds) - Client 0 :", remaining_times[0], "Client 1 :", remaining_times[1])
+        print("remaining time (in seconds) - Player 1 (Client 0):", remaining_times[0], "Player 2 (Client 1) :", remaining_times[1])
 
     # Game over
     stats = [w/TIMES for w in won]
     print("Statistics:")
-    print("Client 0 (symbol {}): {}".format(players[0], stats[0]))
-    print("Client 1 (symbol {}): {}".format(players[1], stats[1]))
+    print("Player {} (Client 0): {}".format(players[0], stats[0]))
+    print("Player {} (Client 1): {}".format(players[1], stats[1]))
 
     if won[0] == won[1]:
         winner = None
     else:
         winner = 0 if won[0] > won[1] else 1
-    if winner:
-        print("Winner is: Client {} (symbol {})".format(winner, players[winner]))
+    if winner is not None:
+        print("Winner is: Player {} (Client {})".format(winner, players[winner]))
     else:
         print("Game outcome: Draw")
     
