@@ -39,7 +39,6 @@ első lépés, azaz az ellenfélnek nem volt még előző lépése, akkor a "mov
 Példa: {"cmd": "move", "move": [1, 3], "exclude": [4, 1]}
 A kliens ezután válaszol egy hasonló json objektummal amiben jelzi az ő lépését a "move" és "exclude" mezőkkel:
     {
-        "cmd": "move",
         "move": [<x1>, <y1>],
         "exclude": [<x2>, <y2>]
     }
