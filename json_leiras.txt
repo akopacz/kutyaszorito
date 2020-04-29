@@ -37,6 +37,13 @@ első lépés, azaz az ellenfélnek nem volt még előző lépése, akkor a "mov
         "exclude": [<x2>, <y2>]
     }
 Példa: {"cmd": "move", "move": [1, 3], "exclude": [4, 1]}
+A kliens ezután válaszol egy hasonló json objektummal amiben jelzi az ő lépését a "move" és "exclude" mezőkkel:
+    {
+        "cmd": "move",
+        "move": [<x1>, <y1>],
+        "exclude": [<x2>, <y2>]
+    }
+Példa: {"move": [2, 2], "exclude": [4, 4]}
 
 Amiután az összes játszma véget ért, ezt az üzenetet kapják a játékosok:
     {
