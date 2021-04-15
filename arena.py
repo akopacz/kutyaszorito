@@ -198,7 +198,7 @@ def main():
         else:
             winner = 0 if won[0] > won[1] else 1
         if winner is not None:
-            print("Winner is: Player {} (Client {})".format(winner, players[winner]))
+            print("Winner is: Player {} (Client {})".format(players[winner], winner))
         else:
             print("Game outcome: Draw")
         
