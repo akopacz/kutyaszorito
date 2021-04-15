@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import socket
-import sys
 import json
 import numpy as np
 import time
@@ -26,7 +25,7 @@ def is_valid_move(old_pos, new_pos):
     return abs(old_pos[0] - new_pos[0]) <= 1 and abs(old_pos[1] - new_pos[1]) <= 1
 
 def is_over(board, pos):
-    return any(
+    return not any(
         (
             (board[i, j] == 0) 
             for i in range(max(0, pos[0]-1), min(K, pos[0] + 2)) 
@@ -215,7 +214,7 @@ def main():
         # Clean up the connection
         for conn in clients:
             conn.close()
-        
+
         sock.close()
 
 if __name__ == "__main__":
