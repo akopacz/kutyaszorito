@@ -5,6 +5,7 @@ Futtatás:
 ```sh
 python3 arena.py
 ```
+# Kutyaszorító - Kommunikációs protokoll
 
 A két kliens a 'localhost' 10000 portra kell csatlakozzon ahhoz, hogy tudjanak kommunikálni a szerverrel.
 
@@ -14,8 +15,7 @@ Valósítsunk meg egy klienst úgy, hogy a bot játékos tudjon csatlakozni egy 
 
 A kliens a localhost:10000 címre kell csatlakozzon (tcp kapcsolattal). A sikeres csatlakozás esetén a szerver küld egy 
 inicializációs üzenetet, amelyben szerepel a pálya mérete, és az éppen csatlakozó játékos sorszáma. A játékosok lehetséges sorszámai: 1 vagy 2. 
-
-Az üzenet struktúrája:
+Az üzenet struktúrája a következő:
 ```jsonc
 {
     "cmd": "init",
@@ -23,7 +23,6 @@ Az üzenet struktúrája:
     "id": <játékos id-ja>
 }
 ```
-
 Példa: `{"cmd": "init", "K": 7, "id": 2}`
 
 A kliens jelzi, hogy megkapta az üzenetet:
@@ -41,7 +40,6 @@ Minden új kör elején a szerver küld egy "start" üzenetet, a játékosok kez
     "op_coords": [<x2>, <y2>]  // az ellenfél játékos koordinátája 
 }
 ```
-
 Példa: `{"cmd": "start", "coords": [0, 2], "op_coords": [4, 2]}`
 
 Ez az üzenet jelzi, hogy egy új kör kezdődött, a szerver nem küld egy külön üzenetet, hogy befejeződött az előző kör. 
@@ -88,7 +86,7 @@ elveszíti azt a kört és új játék kezdődik.
 {
     "cmd": "error",
     "msg": <üzenet>,        // a hibát leiró specifikusabb üzenet
-    "id": <játékos id>  // az a játékos, aki hibás mezőre lépett volna vagy nem megengedett mezőt szeretne kizárni
+    "id": <játékos id>      // az a játékos, aki hibás mezőt jelölt meg
 }
 ```
 Példa: `{"cmd": "error", "msg": "invalid input", "id": 1}`
